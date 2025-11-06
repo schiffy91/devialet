@@ -13,9 +13,29 @@ private:
   unsigned long _lastSeen = 0;
   IRCommand _last = IRCommand::None;
   
-  static constexpr uint64_t LG_VOL_UP = 0x20DF40BFULL;
-  static constexpr uint64_t LG_VOL_DOWN = 0x20DFC03FULL;
-  static constexpr uint64_t LG_MUTE = 0x20DF906FULL;
+  struct IRCodeMapping {
+    uint64_t code;
+    IRCommand command;
+  };
+  
+  IRCommand decodeCommand(uint64_t value) const {
+    // LG TV Remote codes
+    if (value == 0x20DF40BFULL) return IRCommand::VolumeUp;
+    if (value == 0x20DFC03FULL) return IRCommand::VolumeDown;
+    if (value == 0x20DF906FULL) return IRCommand::Mute;
+    
+    // Samsung TV Remote codes (NEC protocol)
+    if (value == 0xE0E0E01FULL) return IRCommand::VolumeUp;
+    if (value == 0xE0E0D02FULL) return IRCommand::VolumeDown;
+    if (value == 0xE0E0F00FULL) return IRCommand::Mute;
+    
+    // Samsung TV Remote Alt codes (some models)
+    if (value == 0x707E01FEULL) return IRCommand::VolumeUp;
+    if (value == 0x707E817EULL) return IRCommand::VolumeDown;
+    if (value == 0x707E906FULL) return IRCommand::Mute;
+    
+    return IRCommand::None;
+  }
 
 public:
   IRReceiver(uint8_t pin) : _recv(pin) {}
@@ -30,13 +50,19 @@ public:
     if (!_recv.decode(&_res)) return IRCommand::None;
     
     _lastSeen = millis();
-    if (debug) *debug = "0x" + String((unsigned long long)_res.value, HEX);
+    
+    if (debug) {
+      *debug = String(typeToString(_res.decode_type)) + " 0x" + 
+               String((unsigned long long)_res.value, HEX);
+    }
     
     IRCommand cmd = IRCommand::None;
-    if (_res.value == LG_VOL_UP) cmd = IRCommand::VolumeUp;
-    else if (_res.value == LG_VOL_DOWN) cmd = IRCommand::VolumeDown;
-    else if (_res.value == LG_MUTE) cmd = IRCommand::Mute;
-    else if (_res.repeat && _last != IRCommand::None) cmd = _last;
+    
+    if (_res.repeat && _last != IRCommand::None) {
+      cmd = _last;
+    } else {
+      cmd = decodeCommand(_res.value);
+    }
     
     _recv.resume();
     if (cmd != IRCommand::None) _last = cmd;

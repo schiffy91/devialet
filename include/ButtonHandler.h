@@ -27,8 +27,13 @@ public:
   ButtonHandler(Display& d, SpeakerManager& s, IRReceiver& i) : _display(d), _speakers(s), _ir(i) {}
   
   void checkButtons() {
-    if (M5.BtnA.wasPressed()) handle(IRCommand::VolumeUp, "VOL UP");
-    else if (M5.BtnB.wasPressed()) handle(IRCommand::VolumeDown, "VOL DOWN");
+    if (M5.BtnA.wasPressed()) {
+      _display.recordActivity();
+      handle(IRCommand::VolumeUp, "VOL UP");
+    } else if (M5.BtnB.wasPressed()) {
+      _display.recordActivity();
+      handle(IRCommand::VolumeDown, "VOL DOWN");
+    }
   }
   
   void checkIR() {
@@ -36,8 +41,10 @@ public:
     IRCommand cmd = _ir.checkForCommand(&debug);
     
     if (cmd != IRCommand::None) {
+      _display.recordActivity();
       handle(cmd, IRReceiver::commandToString(cmd));
     } else if (!debug.isEmpty()) {
+      _display.recordActivity();
       _display.showCommand("UNKNOWN\n" + debug, true);
     }
   }

@@ -33,6 +33,7 @@ void setup() {
   }
   
   buttons.updateScreen();
+  display.markSetupComplete();
 }
 
 void loop() {
