@@ -1,6 +1,7 @@
 #pragma once
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include "Config.h"
 #include "Logger.h"
 
 class Connectivity {
@@ -10,7 +11,6 @@ private:
   const char* _host;
   bool _mdns = false;
   unsigned long _lastConnectAttempt = 0;
-  static constexpr unsigned long RECONNECT_INTERVAL_MS = 5000;
 
 public:
   Connectivity(const char* ssid, const char* pass, const char* host = "m5-phantom")
@@ -18,7 +18,7 @@ public:
   
   void connect() {
     if (WiFi.status() == WL_CONNECTED) return;
-    if (millis() - _lastConnectAttempt < RECONNECT_INTERVAL_MS) return;
+    if (millis() - _lastConnectAttempt < WIFI_RECONNECT_INTERVAL_MS) return;
     
     _lastConnectAttempt = millis();
     WiFi.mode(WIFI_STA);

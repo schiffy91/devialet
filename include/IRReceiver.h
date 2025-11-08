@@ -5,24 +5,13 @@
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
+#include "Config.h"
 #include "Logger.h"
 
 enum class IRCommand { None, VolumeUp, VolumeDown, Mute };
 
-constexpr unsigned long BUTTON_REPEAT_INTERVAL_MS = 500;
-
-namespace RawIR {
-  static constexpr uint64_t VOL_UP = 0x0;
-  static constexpr uint64_t VOL_DOWN = 0x0;
-  static constexpr uint64_t MUTE = 0x0;
-}
-
 class IRReceiver {
 private:
-  // Samsung TV remote codes
-  static constexpr uint32_t IR_CODE_SAMSUNG_VOL_UP = 0xE0E0E01F;
-  static constexpr uint32_t IR_CODE_SAMSUNG_VOL_DOWN = 0xE0E0D02F;
-  static constexpr uint32_t IR_CODE_SAMSUNG_MUTE = 0xE0E0F00F;
   
   IRrecv _recv;
   decode_results _res;
@@ -30,9 +19,9 @@ private:
   unsigned long _lastCommandTime = 0;
   
   IRCommand decode(uint64_t val) const {
-    if (val == IR_CODE_SAMSUNG_VOL_UP || val == RawIR::VOL_UP) return IRCommand::VolumeUp;
-    if (val == IR_CODE_SAMSUNG_VOL_DOWN || val == RawIR::VOL_DOWN) return IRCommand::VolumeDown;
-    if (val == IR_CODE_SAMSUNG_MUTE || val == RawIR::MUTE) return IRCommand::Mute;
+    if (val == IRCodes::Samsung::VOL_UP || val == IRCodes::Custom::VOL_UP) return IRCommand::VolumeUp;
+    if (val == IRCodes::Samsung::VOL_DOWN || val == IRCodes::Custom::VOL_DOWN) return IRCommand::VolumeDown;
+    if (val == IRCodes::Samsung::MUTE || val == IRCodes::Custom::MUTE) return IRCommand::Mute;
     return IRCommand::None;
   }
 
@@ -44,7 +33,7 @@ public:
   IRCommand check() {
     if (!_recv.decode(&_res)) return IRCommand::None;
     
-    if (_res.value == 0xFFFFFFFF || _res.value == 0 || _res.bits < 8) {
+    if (_res.value == 0xFFFFFFFF || _res.value == 0 || _res.bits < IR_MIN_BITS) {
       _recv.resume();
       return IRCommand::None;
     }
@@ -54,7 +43,8 @@ public:
     IRCommand cmd = decode(_res.value);
     if (cmd != IRCommand::None) {
       unsigned long now = millis();
-      if (cmd == _last && now - _lastCommandTime < BUTTON_REPEAT_INTERVAL_MS) {
+      unsigned long interval = (cmd == IRCommand::Mute) ? IR_MUTE_REPEAT_INTERVAL_MS : IR_REPEAT_INTERVAL_MS;
+      if (cmd == _last && now - _lastCommandTime < interval) {
         _recv.resume();
         return IRCommand::None;
       }

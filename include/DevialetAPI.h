@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <HTTPClient.h>
+#include "Config.h"
 #include "Logger.h"
 #include "JsonHelper.h"
 
@@ -13,7 +14,6 @@ struct SpeakerState {
 
 class DevialetAPI {
 private:
-  static constexpr int TIMEOUT_MS = 300;
 
 public:
   SpeakerState getState(const String& ip) {
@@ -25,7 +25,7 @@ public:
     if (!http.begin(client, url)) return state;
     
     Logger::debugHttpGet(url);
-    http.setTimeout(TIMEOUT_MS);
+    http.setTimeout(HTTP_TIMEOUT_MS);
     int code = http.GET();
     String payload = http.getString();
     http.end();
@@ -56,7 +56,7 @@ public:
     String body = JsonHelper::buildFlatPayload(state.role.c_str(), vol, state.enabled);
     Logger::debugHttpPost(url, body);
     
-    http.setTimeout(TIMEOUT_MS);
+    http.setTimeout(HTTP_TIMEOUT_MS);
     http.addHeader("Content-Type", "application/json");
     
     int code = http.POST(body);

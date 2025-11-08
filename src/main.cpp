@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "Config.h"
 #include "Secrets.h"
 #include "Logger.h"
 #include "Display.h"
@@ -6,8 +7,6 @@
 #include "IRReceiver.h"
 #include "Speaker.h"
 #include "ButtonHandler.h"
-
-constexpr uint8_t IR_PIN = 33;
 
 Logger logger;
 Display display;

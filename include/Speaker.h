@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "Config.h"
 #include "DevialetAPI.h"
 #include "IRReceiver.h"
 #include "Connectivity.h"
@@ -15,8 +16,12 @@ private:
   
   int calcVolume(IRCommand cmd, int currentVol) const {
     switch (cmd) {
-      case IRCommand::VolumeUp: return min(currentVol + 2, 100);
-      case IRCommand::VolumeDown: return max(currentVol - 2, 0);
+      case IRCommand::VolumeUp:
+        if (currentVol == 0 && _preMuteVolume > 0) return min(_preMuteVolume + VOLUME_INCREMENT, VOLUME_MAX);
+        return min(currentVol + VOLUME_INCREMENT, VOLUME_MAX);
+      case IRCommand::VolumeDown:
+        if (currentVol == 0 && _preMuteVolume > 0) return max(_preMuteVolume - VOLUME_INCREMENT, VOLUME_MIN);
+        return max(currentVol - VOLUME_INCREMENT, VOLUME_MIN);
       case IRCommand::Mute: 
         return (currentVol == 0 && _preMuteVolume > 0) ? _preMuteVolume : 0;
       default: return -1;
@@ -64,6 +69,15 @@ public:
     return true;
   }
   
+  bool setVolume(DevialetAPI& api, int targetVol) {
+    refresh(api);
+    if (!_state.isValid()) return false;
+    _optimisticVolume = targetVol;
+    bool ok = api.setVolume(_ip, targetVol, _state);
+    if (ok) refresh(api);
+    return true;
+  }
+  
   SpeakerDisplayInfo info() const {
     return { roleLetter(), _optimisticVolume >= 0 ? _optimisticVolume : 0, _ip };
   }
@@ -73,9 +87,12 @@ class SpeakerManager {
 private:
   std::vector<Speaker> _speakers;
   DevialetAPI _api;
+  Connectivity* _wifi = nullptr;
+  bool _needsRediscovery = false;
 
 public:
   void discover(Connectivity& wifi) {
+    _wifi = &wifi;
     _speakers.clear();
     int n = wifi.queryMDNSService("http", "tcp");
     for (int i = 0; i < n; i++) {
@@ -86,6 +103,7 @@ public:
       }
     }
     Logger::logf("Found %u speaker(s)\n", _speakers.size());
+    _needsRediscovery = false;
   }
   
   void refresh() {
@@ -96,11 +114,18 @@ public:
   }
   
   int executeAll(IRCommand cmd) {
+    if (_needsRediscovery && _wifi) { discover(*_wifi); refresh(); }
     int ok = 0;
     for (auto& sp : _speakers) {
       if (sp.execute(_api, cmd)) ok++;
       yield();
     }
+    if (SYNC_SPEAKER_VOLUMES && ok > 0 && cmd != IRCommand::Mute) {
+      int minVol = _speakers[0].info().volume;
+      for (const auto& sp : _speakers) minVol = min(minVol, sp.info().volume);
+      for (auto& sp : _speakers) { sp.setVolume(_api, minVol); yield(); }
+    }
+    if (ok < _speakers.size()) _needsRediscovery = true;
     return ok;
   }
   

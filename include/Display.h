@@ -1,6 +1,7 @@
 #pragma once
 #include <M5Unified.h>
 #include <vector>
+#include "Config.h"
 
 struct SpeakerDisplayInfo {
   char role;
@@ -13,11 +14,10 @@ private:
   unsigned long _lastActivity = 0;
   bool _screenOn = true;
   bool _setupComplete = false;
-  static constexpr unsigned long SLEEP_MS = 5000;
   
   uint16_t volumeColor(int vol) const {
-    if (vol < 35) return TFT_DARKGREY;
-    if (vol < 70) return TFT_ORANGE;
+    if (vol < VOLUME_COLOR_LOW_THRESHOLD) return TFT_DARKGREY;
+    if (vol < VOLUME_COLOR_HIGH_THRESHOLD) return TFT_ORANGE;
     return TFT_RED;
   }
   
@@ -40,7 +40,7 @@ public:
   
   void update() { 
     M5.update();
-    if (_setupComplete && _screenOn && (millis() - _lastActivity) > SLEEP_MS) {
+    if (_setupComplete && _screenOn && (millis() - _lastActivity) > DISPLAY_SLEEP_MS) {
       M5.Display.sleep();
       M5.Display.setBrightness(0);
       _screenOn = false;
