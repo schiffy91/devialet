@@ -6,3 +6,6 @@
 
 # Secrets
 include/Secrets.h
+
+# macOS
+.DS_Store
