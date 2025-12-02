@@ -45,11 +45,18 @@ Volume displayed per speaker with color coding:
 
 **For IR Volume Control (this project):**
 - [M5StickC Plus2](https://www.amazon.com/dp/B0F3XQ22XS) - $35
-- [IR Receiver Module (TL1838/VS1838B)](https://www.amazon.com/dp/B087ZRD3LH) - $5
-- [Dupont Jumper Wires](https://www.amazon.com/dp/B01EV70C78) - $5
+- **IR Receiver (Choose one):**
+  - **Option A (Recommended):** [M5Stack Unit IR](https://docs.m5stack.com/en/unit/ir) - Plug & Play, no soldering or jumper wires needed – but needs to be imported from China.
+    - *Note: The M5Stack Unit IR does not emit a red light when receiving commands, which is generally preferred.*
+  - **Option B (Amazon Prime):** [IR Receiver Module (TL1838/VS1838B)](https://www.amazon.com/dp/B087ZRD3LH) + [Dupont Jumper Wires](https://www.amazon.com/dp/B01EV70C78) - ~$10 total and available on Amazon Prime.
 - Any Samsung TV remote (or program custom codes)
 
-**Wiring**: IR OUT→GPIO33, VCC→3.3V, GND→GND
+**Wiring & Configuration:**
+
+| Option | Wiring | Config.h Setting |
+|--------|--------|------------------|
+| **M5Stack Unit IR** | Plug into Grove Port (Port A) | `IR_PIN = 33` |
+| **DIY IR Receiver** | IR OUT→GPIO33, VCC→3.3V, GND→GND | `IR_PIN = 33` |
 
 **For Devialet Speakers:**
 - Speakers must be in [Optical Direct mode](https://help.devialet.com/hc/en-us/articles/360019120140-Optical-Direct-on-Phantom-Custom-installations)
@@ -69,7 +76,7 @@ Volume displayed per speaker with color coding:
 All configuration options are centralized in `include/Config.h`:
 
 ### Hardware Settings
-- **IR_PIN** (33): GPIO pin for IR receiver
+- **IR_PIN**: GPIO pin for IR receiver (33 for both M5Stack Unit IR and DIY Receiver)
 
 ### IR Remote Settings
 - **IR Codes**: Pre-configured Samsung TV codes + custom codes
@@ -135,7 +142,7 @@ If you need **low-latency audio** for gaming, live music, or movies where lip-sy
 
 All-optical audio = low latency and no DACs in the chain besides Devialet's. IR volume control operates independently over your network.
 
-![Audio Chain](assets/AUDIO_CHAIN.jpg)
+![Audio Chain](assets/AUDIO_CHAIN.png)
 
 ### Why This Setup?
 
@@ -153,7 +160,8 @@ This setup uses **hardware DSP** and **all-optical signal path** for instant pro
 
 **Signal Processing:**
 - [Automatic Optical Switch](https://www.amazon.com/dp/B0D45GY575) - Auto-selects active source
-- [Behringer DEQ2496](https://www.amazon.com/dp/B000CCN152) - Digital equalizer with hardware DSP (zero-latency room EQ)
+- [Behringer DEQ2496](https://www.amazon.com/dp/B000CCN152) - Digital equalizer with hardware DSP (low-latency room EQ)
+- [Behringer SRC2496] (https://www.behringer.com/product.html?modelCode=0606-AAF) - Sample Rate Converter (prevents audible popping over  optical audio when sample rate changes between songs or sourcecs). It's a legacy product, but it's built like a tank. You can find many new or in great condition for ~$100 on eBay.
 - [Active Optical Splitter](https://www.amazon.com/dp/B0CFY365KH) - Splits to stereo pair
 
 **Speakers:**
@@ -161,7 +169,7 @@ This setup uses **hardware DSP** and **all-optical signal path** for instant pro
 
 **Volume Control:**
 - [M5StickC Plus2](https://www.amazon.com/dp/B0F3XQ22XS) - $35
-- [IR Receiver Module](https://www.amazon.com/dp/B087ZRD3LH) - $5
+- [M5Stack Unit IR](https://docs.m5stack.com/en/unit/ir) - $5 OR [DIY IR Receiver Module](https://www.amazon.com/dp/B087ZRD3LH) - $5
 - [Dupont Jumper Wires](https://www.amazon.com/dp/B01EV70C78) - $5
 - Any Samsung TV remote
 

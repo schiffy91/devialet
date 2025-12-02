@@ -4,7 +4,7 @@
 // HARDWARE PINS
 // =============================================================================
 
-constexpr uint8_t IR_PIN = 33;  // GPIO pin for IR receiver (TL1838/VS1838B)
+constexpr uint8_t IR_PIN = 33;  // GPIO pin for IR receiver (Unit IR: White wire = G33)
 
 // =============================================================================
 // IR REMOTE CODES
