@@ -54,6 +54,8 @@ public:
       _mdns = true;
       MDNS.addService("http", "tcp", 80);
       Logger::info("mDNS started");
+    } else {
+      Logger::error("mDNS failed to start");
     }
   }
   
